@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@500;600&display=swap');
+
+  :root{
+    --body-cream: #EDE7D9;
+    --body-cream-dark: #DED5C0;
+    --panel: #1B1B18;
+    --panel-digit: #E8722C;
+    --panel-digit-dim: #4a2f18;
+    --key-light: #F7F4EC;
+    --key-light-text: #26241F;
+    --key-shadow: #C9C0AA;
+    --accent: #E8722C;
+    --accent-dark: #C85A1A;
+    --graphite: #26241F;
+    --graphite-text: #F7F4EC;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    height: 100%;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 30% 20%, #3a3733, #171615 70%);
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+
+  .device{
+    width: 320px;
+    background: linear-gradient(160deg, var(--body-cream), var(--body-cream-dark));
+    border-radius: 22px;
+    padding: 22px 20px 26px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+
+  .brand{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 4px 14px;
+  }
+
+  .brand-name{
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6b6455;
+  }
+
+  .brand-model{
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: #a89f8b;
+  }
+
+  .screen{
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 22px 18px 16px;
+    margin-bottom: 16px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), inset 0 0 0 1px #000;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screen::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.02),
+      rgba(255,255,255,0.02) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+  }
+
+  .screen-expr{
+    min-height: 16px;
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--panel-digit-dim);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .screen-result{
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 40px;
+    font-weight: 500;
+    color: var(--panel-digit);
+    text-shadow: 0 0 12px rgba(232,114,44,0.45);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .screen-result::-webkit-scrollbar{ display:none; }
+
+  .pad{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  button{
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    height: 58px;
+    border-radius: 12px;
+    cursor: pointer;
+    background: var(--key-light);
+    color: var(--key-light-text);
+    box-shadow:
+      0 3px 0 var(--key-shadow),
+      0 4px 6px rgba(0,0,0,0.15);
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:active{
+    transform: translateY(3px);
+    box-shadow: 0 0 0 var(--key-shadow), 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .key-func{
+    background: #DED2BC;
+    color: #55503f;
+    font-size: 15px;
+  }
+  .key-func:active{ box-shadow: 0 0 0 #b8ac93; }
+  .key-func{ box-shadow: 0 3px 0 #b8ac93, 0 4px 6px rgba(0,0,0,0.12); }
+
+  .key-op{
+    background: var(--accent);
+    color: #fff8f0;
+    font-size: 20px;
+  }
+  .key-op{ box-shadow: 0 3px 0 var(--accent-dark), 0 4px 6px rgba(0,0,0,0.2); }
+  .key-op:active{ box-shadow: 0 0 0 var(--accent-dark); }
+  .key-op.is-active{
+    background: #fff8f0;
+    color: var(--accent-dark);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.25);
+  }
+
+  .key-equals{
+    grid-column: span 2;
+    background: var(--graphite);
+    color: var(--graphite-text);
+    font-size: 18px;
+    letter-spacing: 0.05em;
+  }
+  .key-equals{ box-shadow: 0 3px 0 #100f0d, 0 4px 6px rgba(0,0,0,0.25); }
+  .key-equals:active{ box-shadow: 0 0 0 #100f0d; }
+
+  .key-zero{ grid-column: span 2; }
+
+  @media (max-width: 360px){
+    .device{ width: 92vw; }
+  }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="brand">
+    <span class="brand-name">Instrument</span>
+    <span class="brand-model">No. 04</span>
+  </div>
+
+  <div class="screen">
+    <div class="screen-expr" id="expr">&nbsp;</div>
+    <div class="screen-result" id="result">0</div>
+  </div>
+
+  <div class="pad">
+    <button class="key-func" data-action="clear">AC</button>
+    <button class="key-func" data-action="negate">±</button>
+    <button class="key-func" data-action="percent">%</button>
+    <button class="key-op" data-op="÷">÷</button>
+
+    <button data-num="7">7</button>
+    <button data-num="8">8</button>
+    <button data-num="9">9</button>
+    <button class="key-op" data-op="×">×</button>
+
+    <button data-num="4">4</button>
+    <button data-num="5">5</button>
+    <button data-num="6">6</button>
+    <button class="key-op" data-op="−">−</button>
+
+    <button data-num="1">1</button>
+    <button data-num="2">2</button>
+    <button data-num="3">3</button>
+    <button class="key-op" data-op="+">+</button>
+
+    <button class="key-zero" data-num="0">0</button>
+    <button data-action="decimal">.</button>
+    <button class="key-equals" data-action="equals">=</button>
+  </div>
+</div>
+
+<script>
+  const exprEl = document.getElementById('expr');
+  const resultEl = document.getElementById('result');
+
+  let current = '0';
+  let previous = null;
+  let operator = null;
+  let justEvaluated = false;
+
+  const opButtons = document.querySelectorAll('[data-op]');
+
+  function formatNumber(numStr){
+    if (numStr === 'Error') return numStr;
+    const [intPart, decPart] = numStr.split('.');
+    const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return decPart !== undefined ? withCommas + '.' + decPart : withCommas;
+  }
+
+  function updateScreen(){
+    resultEl.textContent = formatNumber(current);
+    if (operator && previous !== null){
+      exprEl.textContent = `${formatNumber(previous)} ${operator}`;
+    } else {
+      exprEl.textContent = '\u00a0';
+    }
+    opButtons.forEach(b => b.classList.toggle('is-active', b.dataset.op === operator && !justEvaluated));
+  }
+
+  function inputDigit(d){
+    if (justEvaluated){
+      current = d;
+      justEvaluated = false;
+    } else {
+      current = current === '0' ? d : current + d;
+    }
+    if (current.replace(/[-.]/g,'').length > 12) current = current.slice(0, -1);
+  }
+
+  function inputDecimal(){
+    if (justEvaluated){
+      current = '0.';
+      justEvaluated = false;
+      return;
+    }
+    if (!current.includes('.')) current += '.';
+  }
+
+  function clearAll(){
+    current = '0';
+    previous = null;
+    operator = null;
+    justEvaluated = false;
+  }
+
+  function negate(){
+    if (current === '0') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+  }
+
+  function percent(){
+    current = String(parseFloat(current) / 100);
+  }
+
+  function compute(a, b, op){
+    a = parseFloat(a); b = parseFloat(b);
+    switch(op){
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? NaN : a / b;
+      default: return b;
+    }
+  }
+
+  function chooseOperator(op){
+    if (operator && previous !== null && !justEvaluated){
+      const res = compute(previous, current, operator);
+      previous = Number.isNaN(res) ? 'Error' : trimResult(res);
+      current = previous;
+    } else {
+      previous = current;
+    }
+    operator = op;
+    justEvaluated = false;
+  }
+
+  function trimResult(num){
+    if (!isFinite(num)) return 'Error';
+    let str = num.toPrecision(12);
+    if (str.includes('.')) str = str.replace(/0+$/, '').replace(/\.$/, '');
+    if (str.includes('e')) str = String(num);
+    return str;
+  }
+
+  function equals(){
+    if (operator === null || previous === null) return;
+    const res = compute(previous, current, operator);
+    current = Number.isNaN(res) ? 'Error' : trimResult(res);
+    previous = null;
+    operator = null;
+    justEvaluated = true;
+  }
+
+  document.querySelectorAll('button[data-num]').forEach(btn => {
+    btn.addEventListener('click', () => { inputDigit(btn.dataset.num); updateScreen(); });
+  });
+
+  opButtons.forEach(btn => {
+    btn.addEventListener('click', () => { chooseOperator(btn.dataset.op); updateScreen(); });
+  });
+
+  document.querySelector('[data-action="clear"]').addEventListener('click', () => { clearAll(); updateScreen(); });
+  document.querySelector('[data-action="negate"]').addEventListener('click', () => { negate(); updateScreen(); });
+  document.querySelector('[data-action="percent"]').addEventListener('click', () => { percent(); updateScreen(); });
+  document.querySelector('[data-action="decimal"]').addEventListener('click', () => { inputDecimal(); updateScreen(); });
+  document.querySelector('[data-action="equals"]').addEventListener('click', () => { equals(); updateScreen(); });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key >= '0' && e.key <= '9'){ inputDigit(e.key); updateScreen(); }
+    else if (e.key === '.'){ inputDecimal(); updateScreen(); }
+    else if (e.key === '+'){ chooseOperator('+'); updateScreen(); }
+    else if (e.key === '-'){ chooseOperator('−'); updateScreen(); }
+    else if (e.key === '*'){ chooseOperator('×'); updateScreen(); }
+    else if (e.key === '/'){ e.preventDefault(); chooseOperator('÷'); updateScreen(); }
+    else if (e.key === 'Enter' || e.key === '='){ equals(); updateScreen(); }
+    else if (e.key === 'Backspace'){
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+      updateScreen();
+    }
+    else if (e.key === 'Escape'){ clearAll(); updateScreen(); }
+  });
+
+  updateScreen();
+</script>
+
+</body>
+</html>
